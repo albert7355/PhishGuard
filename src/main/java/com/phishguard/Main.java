@@ -3,6 +3,7 @@ package com.phishguard;
 import java.util.Scanner;
 
 import com.phishguard.analyzer.URLAnalyzer;
+import com.phishguard.model.AnalysisResult;
 
 public class Main {
     public static void main(String[] args) {
@@ -11,16 +12,34 @@ public class Main {
 
         System.out.print("Enter a URL: ");
         String url = scanner.nextLine().trim();
-
-        System.out.println("You entered: " + url);
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
-        int riskScore = analyzer.calculateRiskScore(url);
-        String riskLevel = analyzer.getRiskLevel(riskScore);
+      System.out.println("You entered: " + url);
 
-        System.out.println("Risk Score: " + riskScore);
-        System.out.println("Risk Level: " + riskLevel);
+        if (!analyzer.isValidURL(url)) {
+        System.out.println("Invalid URL");
+        System.out.println("Reason: " + analyzer.getInvalidURLReason(url));
+        scanner.close();
+        return;
+      }
+
+      System.out.println("Main Domain: " + analyzer.getMainDomain(url));
+
+      AnalysisResult result = analyzer.analyze(url);
+      AnalysisResult secondResult = analyzer.analyze(url);
+      System.out.println("Risk Score: " + result.getRiskScore());
+        System.out.println("Risk Level: " + result.getRiskLevel());
+
+        System.out.println("Indicators:");
+
+        for (String indicator : result.getIndicators()) {
+            System.out.println("- " + indicator);
+        }
+        System.out.println();
+        System.out.println("Note: PhishGuard uses heuristic URL analysis.");
+        System.out.println("Risk levels are based on detected indicators and do not guarantee that a URL is safe or malicious.");
+
+        
 
         scanner.close();
     }

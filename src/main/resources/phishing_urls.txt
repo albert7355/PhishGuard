@@ -1,0 +1,5 @@
+http://142.250.195.14/login
+http://example-phishing-test.com/login
+https://fake-paypal-login.example.com
+https://secure-bank-update.example.com
+http://account-verification.example-test.com
