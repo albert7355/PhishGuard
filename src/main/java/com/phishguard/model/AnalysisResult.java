@@ -1,5 +1,6 @@
 package com.phishguard.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class AnalysisResult {
@@ -7,11 +8,22 @@ public class AnalysisResult {
     private int riskScore;
     private String riskLevel;
     private List<String> indicators;
+    private LocalDateTime analyzedAt;
 
     public AnalysisResult(int riskScore, String riskLevel, List<String> indicators) {
         this.riskScore = riskScore;
         this.riskLevel = riskLevel;
         this.indicators = indicators;
+        this.analyzedAt = LocalDateTime.now();
+    }
+
+    public AnalysisResult(int riskScore, String riskLevel,
+            List<String> indicators, LocalDateTime analyzedAt) {
+
+        this.riskScore = riskScore;
+        this.riskLevel = riskLevel;
+        this.indicators = indicators;
+        this.analyzedAt = analyzedAt;
     }
 
     public int getRiskScore() {
@@ -24,5 +36,9 @@ public class AnalysisResult {
 
     public List<String> getIndicators() {
         return indicators;
+    }
+
+    public LocalDateTime getAnalyzedAt() {
+        return analyzedAt;
     }
 }

@@ -34,9 +34,9 @@ public class PhishingDatabase {
 
                 line = line.trim();
 
-                if (!line.isEmpty()) {
-                    phishingUrls.add(line);
-                }
+                if (!line.isEmpty() && !line.startsWith("#")) {
+                phishingUrls.add(line);
+             }
             }
 
         } catch (Exception e) {

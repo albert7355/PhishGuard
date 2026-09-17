@@ -24,10 +24,13 @@ public class Main {
       }
 
       System.out.println("Main Domain: " + analyzer.getMainDomain(url));
-
+      
+      boolean previouslyAnalyzed = analyzer.isCached(url);
       AnalysisResult result = analyzer.analyze(url);
-      AnalysisResult secondResult = analyzer.analyze(url);
-      System.out.println("Risk Score: " + result.getRiskScore());
+      if (previouslyAnalyzed) {
+      System.out.println("Result retrieved from previous analysis.");
+}
+       System.out.println("Risk Score: " + result.getRiskScore());
         System.out.println("Risk Level: " + result.getRiskLevel());
 
         System.out.println("Indicators:");

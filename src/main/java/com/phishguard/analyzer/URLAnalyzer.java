@@ -13,7 +13,7 @@ import com.phishguard.model.AnalysisResult;
 public class URLAnalyzer {
     private final PhishingDatabase database = new PhishingDatabase();
     private final AnalysisCache cache = new AnalysisCache();
-
+    private static final long CACHE_TTL_HOURS = 24;
     private static final int IP_RISK = 2;
     private static final int HTTP_RISK = 1;
     private static final int LONG_URL_RISK = 1;
@@ -247,6 +247,9 @@ public boolean hasManySubdomains(String url) {
 
     return hyphenCount >= 2;
   }
+    public boolean isCached(String url) {
+    return cache.isFresh(url, CACHE_TTL_HOURS);
+   }
     public AnalysisResult analyze(String url) {
         if (!isValidURL(url)) {
             return new AnalysisResult(
@@ -255,11 +258,9 @@ public boolean hasManySubdomains(String url) {
             List.of("Invalid or unsupported URL")
     );
 }
-        AnalysisResult cachedResult = cache.get(url);
-        if (cachedResult != null) {
-            System.out.println("Result fetched from cache.");
-            return cachedResult;
-        }
+        if (cache.isFresh(url, CACHE_TTL_HOURS)) {
+         return cache.get(url);
+       }
     int score = 0;
     List<String> indicators = new ArrayList<>();
     if (isKnownPhishingURL(url)) {
