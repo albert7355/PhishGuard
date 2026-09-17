@@ -1,5 +1,14 @@
+# PhishGuard test phishing database
+
 http://142.250.195.14/login
 http://example-phishing-test.com/login
 https://fake-paypal-login.example.com
 https://secure-bank-update.example.com
 http://account-verification.example-test.com
+
+# Additional test cases
+https://microsoft-account-security.example.com/login
+https://paypal-verification.example.com/verify
+https://apple-id-update.example.com/account
+https://amazon-login-security.example.com/login
+https://bank-account-verify.example.com/update

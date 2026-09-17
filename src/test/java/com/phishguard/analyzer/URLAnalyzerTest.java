@@ -10,7 +10,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldDetectIPAddress() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertTrue(
@@ -20,7 +19,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAcceptValidURL() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertTrue(
@@ -30,7 +28,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldRejectInvalidURL() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertFalse(
@@ -40,7 +37,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForIPAddress() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -52,7 +48,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForHTTP() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -64,7 +59,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForAtSymbol() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -76,7 +70,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForSuspiciousKeyword() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -88,7 +81,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForLongURL() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -100,7 +92,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldCombineMultipleRiskIndicators() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -112,7 +103,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForManySubdomains() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -124,7 +114,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForEncodedCharacters() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -136,7 +125,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldDetectSuspiciousCharacters() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertTrue(
@@ -148,7 +136,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForMisleadingBrandName() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -160,7 +147,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldAddRiskForMultipleHyphens() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         var result = analyzer.analyze(
@@ -172,7 +158,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldDetectKnownPhishingURL() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertTrue(
@@ -184,7 +169,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldReturnLowRisk() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertEquals(
@@ -195,7 +179,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldReturnMediumRisk() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertEquals(
@@ -206,7 +189,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldReturnHighRisk() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertEquals(
@@ -217,7 +199,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldExtractMainDomain() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         assertEquals(
@@ -230,7 +211,6 @@ public class URLAnalyzerTest {
 
     @Test
     void shouldExplainInvalidURL() {
-
         URLAnalyzer analyzer = new URLAnalyzer();
 
         String reason = analyzer.getInvalidURLReason("hello");
@@ -241,4 +221,122 @@ public class URLAnalyzerTest {
                 reason.contains("protocol")
         );
     }
+
+    @Test
+    void shouldCacheURLAfterAnalysis() {
+        URLAnalyzer analyzer = new URLAnalyzer();
+
+        String url = "https://cache-test-one.example.com";
+
+        analyzer.analyze(url);
+
+        assertTrue(
+                analyzer.isCached(url)
+        );
+    }
+
+    @Test
+    void shouldRetrieveCachedResult() {
+        URLAnalyzer analyzer = new URLAnalyzer();
+
+        String url = "https://cache-test-two.example.com";
+
+        var firstResult = analyzer.analyze(url);
+        var secondResult = analyzer.analyze(url);
+
+        assertEquals(
+                firstResult.getRiskScore(),
+                secondResult.getRiskScore()
+        );
+    }
+
+    @Test
+    void shouldRecognizeFreshCache() {
+        URLAnalyzer analyzer = new URLAnalyzer();
+
+        String url = "https://cache-test-three.example.com";
+
+        analyzer.analyze(url);
+
+        assertTrue(
+                analyzer.isCached(url)
+        );
+    }
+
+    @Test
+    void shouldPreserveCachedRiskLevel() {
+        URLAnalyzer analyzer = new URLAnalyzer();
+
+        String url = "https://cache-test-four.example.com";
+
+        var firstResult = analyzer.analyze(url);
+        var secondResult = analyzer.analyze(url);
+
+        assertEquals(
+                firstResult.getRiskLevel(),
+                secondResult.getRiskLevel()
+        );
+    }
+
+    @Test
+    void shouldCacheDifferentURLsSeparately() {
+        URLAnalyzer analyzer = new URLAnalyzer();
+
+        String firstURL = "https://cache-test-five.example.com";
+        String secondURL = "https://cache-test-six.example.com";
+
+        var firstResult = analyzer.analyze(firstURL);
+        var secondResult = analyzer.analyze(secondURL);
+
+        assertTrue(analyzer.isCached(firstURL));
+        assertTrue(analyzer.isCached(secondURL));
+
+        assertNotNull(firstResult);
+        assertNotNull(secondResult);
+    }
+
+    @Test
+    void shouldDetectTrustedURL() {
+        URLAnalyzer analyzer = new URLAnalyzer();
+
+        assertTrue(
+                analyzer.isTrustedURL("https://example.com")
+        );
+    }
+
+   @Test
+     void shouldMarkTrustedURLInAnalysisResult() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    var result = analyzer.analyze(
+            "https://trusted-test.example.com"
+    );
+
+    assertTrue(
+            result.isTrusted()
+    );
+}
+
+    @Test
+    void shouldNotMarkUnknownURLAsTrusted() {
+        URLAnalyzer analyzer = new URLAnalyzer();
+
+        var result = analyzer.analyze(
+                "https://unknown-test-domain.example"
+        );
+
+        assertFalse(
+                result.isTrusted()
+        );
+    }
+    @Test
+        void shouldDetectNewTrustedURL() {
+
+            URLAnalyzer analyzer = new URLAnalyzer();
+
+            assertTrue(
+                    analyzer.isTrustedURL("https://trusted-test.example.com")
+            );
+        }
 }

@@ -29,25 +29,28 @@ public class AnalysisCache {
 
         String normalizedUrl = normalize(url);
 
-        if (cache.containsKey(normalizedUrl)) {
-            return;
-        }
-
         cache.put(normalizedUrl, result);
 
         try (BufferedWriter writer = new BufferedWriter(
-                new FileWriter(cacheFile, true))) {
+                new FileWriter(cacheFile))) {
 
-            writer.write(normalizedUrl);
-            writer.write("|");
-            writer.write(String.valueOf(result.getRiskScore()));
-            writer.write("|");
-            writer.write(result.getRiskLevel());
-            writer.write("|");
-            writer.write(result.getAnalyzedAt().toString());
-            writer.write("|");
-            writer.write(String.join(";", result.getIndicators()));
-            writer.newLine();
+            for (Map.Entry<String, AnalysisResult> entry : cache.entrySet()) {
+
+                AnalysisResult cachedResult = entry.getValue();
+
+                writer.write(entry.getKey());
+                writer.write("|");
+                writer.write(String.valueOf(cachedResult.getRiskScore()));
+                writer.write("|");
+                writer.write(cachedResult.getRiskLevel());
+                writer.write("|");
+                writer.write(cachedResult.getAnalyzedAt().toString());
+                writer.write("|");
+                writer.write(String.valueOf(cachedResult.isTrusted()));
+                writer.write("|");
+                writer.write(String.join(";", cachedResult.getIndicators()));
+                writer.newLine();
+            }
 
         } catch (IOException e) {
             System.out.println("Could not save analysis to cache.");
@@ -93,25 +96,30 @@ public class AnalysisCache {
 
             while ((line = reader.readLine()) != null) {
 
-                String[] parts = line.split("\\|", 5);
+                String[] parts = line.split("\\|", 6);
 
-                if (parts.length != 5) {
+                if (parts.length != 6) {
                     continue;
                 }
 
                 String url = parts[0];
+
                 int score = Integer.parseInt(parts[1]);
+
                 String riskLevel = parts[2];
 
                 LocalDateTime analyzedAt =
                         LocalDateTime.parse(parts[3]);
 
+                boolean trusted =
+                        Boolean.parseBoolean(parts[4]);
+
                 List<String> indicators = new ArrayList<>();
 
-                if (!parts[4].isEmpty()) {
+                if (!parts[5].isEmpty()) {
 
                     String[] indicatorArray =
-                            parts[4].split(";");
+                            parts[5].split(";");
 
                     for (String indicator : indicatorArray) {
                         indicators.add(indicator);
@@ -122,7 +130,8 @@ public class AnalysisCache {
                         score,
                         riskLevel,
                         indicators,
-                        analyzedAt
+                        analyzedAt,
+                        trusted
                 );
 
                 cache.put(url, result);

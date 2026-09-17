@@ -1,0 +1,8 @@
+# PhishGuard trusted URL test database
+
+https://example.com
+https://www.google.com
+https://www.microsoft.com
+https://www.apple.com
+https://www.amazon.com
+https://trusted-test.example.com

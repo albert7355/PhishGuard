@@ -7,12 +7,14 @@ import java.util.List;
 import com.google.common.net.InternetDomainName;
 import com.phishguard.database.AnalysisCache;
 import com.phishguard.database.PhishingDatabase;
+import com.phishguard.database.TrustedDatabase;
 import com.phishguard.model.AnalysisResult;
 
 
 public class URLAnalyzer {
     private final PhishingDatabase database = new PhishingDatabase();
-    private final AnalysisCache cache = new AnalysisCache();
+private final TrustedDatabase trustedDatabase = new TrustedDatabase();
+private final AnalysisCache cache = new AnalysisCache();
     private static final long CACHE_TTL_HOURS = 24;
     private static final int IP_RISK = 2;
     private static final int HTTP_RISK = 1;
@@ -27,8 +29,12 @@ public class URLAnalyzer {
     private static final int DATABASE_MATCH_RISK = 5;
     public boolean isKnownPhishingURL(String url) {
     return database.contains(url);
-}
-public String getInvalidURLReason(String url) {
+    }
+    public boolean isTrustedURL(String url) {
+    
+        return trustedDatabase.contains(url);
+   }
+    public String getInvalidURLReason(String url) {
 
     if (url == null || url.isBlank()) {
         return "URL is empty.";
@@ -258,9 +264,18 @@ public boolean hasManySubdomains(String url) {
             List.of("Invalid or unsupported URL")
     );
 }
-        if (cache.isFresh(url, CACHE_TTL_HOURS)) {
-         return cache.get(url);
-       }
+    if (cache.isFresh(url, CACHE_TTL_HOURS)) {
+
+    AnalysisResult cachedResult = cache.get(url);
+
+    return new AnalysisResult(
+            cachedResult.getRiskScore(),
+            cachedResult.getRiskLevel(),
+            cachedResult.getIndicators(),
+            cachedResult.getAnalyzedAt(),
+            isTrustedURL(url)
+      );
+   }
     int score = 0;
     List<String> indicators = new ArrayList<>();
     if (isKnownPhishingURL(url)) {
@@ -317,10 +332,14 @@ public boolean hasManySubdomains(String url) {
     }
         String riskLevel = getRiskLevel(score);
 
+        boolean trusted = isTrustedURL(url);
+
         AnalysisResult result = new AnalysisResult(
                 score,
                 riskLevel,
-                indicators
+                indicators,
+                java.time.LocalDateTime.now(),
+                trusted
         );
 
         cache.save(url, result);
