@@ -32,6 +32,7 @@ public class Main {
 }
        System.out.println("Risk Score: " + result.getRiskScore());
         System.out.println("Risk Level: " + result.getRiskLevel());
+        System.out.println("Trusted URL: " + (result.isTrusted() ? "Yes" : "No"));
 
         System.out.println("Indicators:");
 

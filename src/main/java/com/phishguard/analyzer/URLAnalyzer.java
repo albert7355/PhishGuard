@@ -13,8 +13,8 @@ import com.phishguard.model.AnalysisResult;
 
 public class URLAnalyzer {
     private final PhishingDatabase database = new PhishingDatabase();
-private final TrustedDatabase trustedDatabase = new TrustedDatabase();
-private final AnalysisCache cache = new AnalysisCache();
+    private final TrustedDatabase trustedDatabase = new TrustedDatabase();
+    private final AnalysisCache cache = new AnalysisCache();
     private static final long CACHE_TTL_HOURS = 24;
     private static final int IP_RISK = 2;
     private static final int HTTP_RISK = 1;
@@ -178,6 +178,23 @@ public boolean hasManySubdomains(String url) {
 
     return url.matches(".*%[0-9a-fA-F]{2}.*");
 }
+   private boolean containsPunycode(String url) {
+
+    try {
+
+        java.net.URI uri =
+                java.net.URI.create(url);
+
+        String host = uri.getHost();
+
+        return host != null &&
+               host.toLowerCase().contains("xn--");
+
+    } catch (Exception e) {
+
+        return false;
+    }
+  }
   public boolean containsSuspiciousCharacters(String url) {
 
     return url.contains("!")
@@ -330,6 +347,10 @@ public boolean hasManySubdomains(String url) {
         score += 1;
         indicators.add("Registered domain contains multiple hyphens");
     }
+    if (containsPunycode(url)) {
+    score += 2;
+    indicators.add("URL uses Punycode encoding");
+  }
         String riskLevel = getRiskLevel(score);
 
         boolean trusted = isTrustedURL(url);
@@ -345,6 +366,7 @@ public boolean hasManySubdomains(String url) {
         cache.save(url, result);
 
         return result;
+        
     }
    public String getSuspiciousKeyword(String url) {
     URI uri;
@@ -413,4 +435,5 @@ public boolean hasManySubdomains(String url) {
         return false;
     }
 }
+
 }

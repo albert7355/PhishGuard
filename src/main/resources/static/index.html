@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PhishGuard | URL Risk Analyzer</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Header -->
+
+        <header class="header">
+
+            <div class="logo">
+                🛡️
+            </div>
+
+            <h1>PhishGuard</h1>
+
+            <p>
+                Phishing URL Detection & Risk Analyzer
+            </p>
+
+        </header>
+
+
+        <!-- URL Analyzer -->
+
+        <main>
+
+            <section class="analyzer-card">
+
+                <h2>Analyze a URL</h2>
+
+                <p class="description">
+                    Check a URL for suspicious phishing indicators
+                    without visiting the website.
+                </p>
+
+
+                <div class="search-box">
+
+                    <input
+                        type="text"
+                        id="urlInput"
+                        placeholder="Enter a URL to analyze"
+                        onkeydown="handleEnter(event)"
+                    >
+
+                    <button
+                        id="analyzeButton"
+                        onclick="analyzeURL()">
+                        Analyze URL
+                    </button>
+
+                    <button
+                        id="clearButton"
+                        onclick="clearAnalysis()">
+                        Clear
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- Current Analysis Result -->
+
+            <section
+                id="result"
+                class="result-card hidden">
+            </section>
+
+
+            <!-- Recent Analysis History -->
+
+            <section
+                id="historySection"
+                class="history-card hidden">
+
+                <div class="history-header">
+
+                    <h2>Recent Analyses</h2>
+
+                    <button
+                        id="clearHistoryButton"
+                        onclick="clearHistory()">
+                        Clear History
+                    </button>
+
+                </div>
+
+                <div id="historyList"></div>
+
+            </section>
+
+        </main>
+
+
+        <!-- Disclaimer -->
+
+        <p class="disclaimer">
+
+            PhishGuard uses heuristic URL analysis.
+            Risk levels are based on detected indicators and do not
+            guarantee that a URL is safe or malicious.
+
+        </p>
+
+
+        <!-- Footer -->
+
+        <footer>
+
+            <p>
+                PhishGuard • URL analysis only • Does not visit submitted URLs
+            </p>
+
+        </footer>
+
+    </div>
+
+
+    <script>
+
+        /*
+         * Recent analysis history
+         */
+
+        let analysisHistory = [];
+
+
+        /*
+         * Analyze URL
+         */
+
+        async function analyzeURL() {
+
+            const urlInput =
+                document.getElementById("urlInput");
+
+            const resultDiv =
+                document.getElementById("result");
+
+            const analyzeButton =
+                document.getElementById("analyzeButton");
+
+
+            const url =
+                urlInput.value.trim();
+
+
+            /*
+             * Empty input
+             */
+
+            if (url === "") {
+
+                resultDiv.className =
+                    "result-card error-card";
+
+                resultDiv.innerHTML = `
+
+                    <h2>Enter a URL</h2>
+
+                    <p>
+                        Please enter a URL before starting
+                        the analysis.
+                    </p>
+
+                `;
+
+                return;
+            }
+
+
+            /*
+             * Loading state
+             */
+
+            analyzeButton.disabled = true;
+
+            analyzeButton.textContent =
+                "Analyzing...";
+
+
+            resultDiv.className =
+                "result-card";
+
+
+            resultDiv.innerHTML = `
+
+                <div class="loading">
+                    Analyzing URL...
+                </div>
+
+            `;
+
+
+            try {
+
+                /*
+                 * Send URL to Spring Boot
+                 */
+
+                const response = await fetch(
+                    "/api/analyze?url=" +
+                    encodeURIComponent(url)
+                );
+
+
+                const result =
+                    await response.json();
+
+
+                /*
+                 * Handle HTTP errors
+                 */
+
+                if (!response.ok) {
+
+                    resultDiv.className =
+                        "result-card error-card";
+
+
+                    resultDiv.innerHTML = `
+
+                        <h2>Invalid URL</h2>
+
+                        <p>
+                            ${escapeHTML(
+                                result.message ||
+                                "The URL could not be analyzed."
+                            )}
+                        </p>
+
+                    `;
+
+                    return;
+                }
+
+
+                /*
+                 * Security indicators
+                 */
+
+                const indicators =
+                    result.indicators.length > 0
+
+                    ? result.indicators
+                        .map(indicator =>
+                            `<li>${escapeHTML(indicator)}</li>`
+                        )
+                        .join("")
+
+                    : `
+
+                        <li class="safe-indicator">
+                            No suspicious indicators detected.
+                        </li>
+
+                    `;
+
+
+                /*
+                 * Trusted status
+                 */
+
+                const trustedStatus =
+                    result.trusted
+                        ? "Trusted"
+                        : "Not in Trusted Database";
+
+
+                /*
+                 * Display result
+                 */
+
+                resultDiv.className =
+                    "result-card";
+
+
+                resultDiv.innerHTML = `
+
+                    <div class="result-header">
+
+                        <div>
+
+                            <p class="result-label">
+                                Analysis Result
+                            </p>
+
+                            <h2 class="${getRiskClass(result.riskLevel)}">
+
+                                ${escapeHTML(result.riskLevel)}
+
+                            </h2>
+
+                        </div>
+
+
+                        <div class="score-box">
+
+                            <span>
+                                Risk Score
+                            </span>
+
+                            <strong>
+                                ${result.riskScore}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="url-section">
+
+                        <p class="section-title">
+                            Analyzed URL
+                        </p>
+
+                        <div class="analyzed-url">
+
+                            ${escapeHTML(url)}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="status-section">
+
+                        <div class="status-item">
+
+                            <span>
+                                Trusted Status
+                            </span>
+
+                            <strong class="${result.trusted
+                                ? 'trusted-yes'
+                                : 'trusted-no'}">
+
+                                ${trustedStatus}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="status-item">
+
+                            <span>
+                                Analyzed At
+                            </span>
+
+                            <strong>
+
+                                ${formatDate(
+                                    result.analyzedAt
+                                )}
+
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="indicators-section">
+
+                        <p class="section-title">
+                            Security Indicators
+                        </p>
+
+                        <ul class="indicators">
+
+                            ${indicators}
+
+                        </ul>
+
+                    </div>
+
+                `;
+
+
+                /*
+                 * Add only successfully
+                 * analyzed URLs to history.
+                 */
+
+                addToHistory(url, result);
+
+            }
+
+
+            catch (error) {
+
+                resultDiv.className =
+                    "result-card error-card";
+
+
+                resultDiv.innerHTML = `
+
+                    <h2>
+                        Analysis Error
+                    </h2>
+
+                    <p>
+                        Unable to analyze the URL.
+                        Please make sure the server
+                        is running.
+                    </p>
+
+                `;
+
+            }
+
+
+            finally {
+
+                analyzeButton.disabled = false;
+
+                analyzeButton.textContent =
+                    "Analyze URL";
+
+            }
+
+        }
+
+
+        /*
+         * Press Enter to analyze
+         */
+
+        function handleEnter(event) {
+
+            if (event.key === "Enter") {
+
+                analyzeURL();
+
+            }
+
+        }
+
+
+        /*
+         * Get CSS class according
+         * to risk level
+         */
+
+        function getRiskClass(riskLevel) {
+
+            if (riskLevel === "Low Risk") {
+
+                return "risk-low";
+
+            }
+
+
+            if (riskLevel === "Medium Risk") {
+
+                return "risk-medium";
+
+            }
+
+
+            return "risk-high";
+
+        }
+
+
+        /*
+         * Format timestamp
+         */
+
+        function formatDate(dateString) {
+
+            const date =
+                new Date(dateString);
+
+
+            return date.toLocaleString(
+                "en-IN",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+        }
+
+
+        /*
+         * Clear current analysis
+         */
+
+        function clearAnalysis() {
+
+            document.getElementById(
+                "urlInput"
+            ).value = "";
+
+
+            const resultDiv =
+                document.getElementById(
+                    "result"
+                );
+
+
+            resultDiv.innerHTML = "";
+
+            resultDiv.className =
+                "result-card hidden";
+
+        }
+
+
+        /*
+         * Add successful analysis
+         * to history
+         */
+
+        function addToHistory(url, result) {
+
+            const historyItem = {
+
+                url: url,
+
+                riskScore:
+                    result.riskScore,
+
+                riskLevel:
+                    result.riskLevel,
+
+                trusted:
+                    result.trusted
+
+            };
+
+
+            analysisHistory.unshift(
+                historyItem
+            );
+
+
+            /*
+             * Keep only the
+             * latest 5 analyses.
+             */
+
+            if (analysisHistory.length > 5) {
+
+                analysisHistory.pop();
+
+            }
+
+
+            displayHistory();
+
+        }
+
+
+        /*
+         * Display recent analyses
+         */
+
+        function displayHistory() {
+
+            const historySection =
+                document.getElementById(
+                    "historySection"
+                );
+
+
+            const historyList =
+                document.getElementById(
+                    "historyList"
+                );
+
+
+            if (analysisHistory.length === 0) {
+
+                historySection.className =
+                    "history-card hidden";
+
+                return;
+
+            }
+
+
+            historySection.className =
+                "history-card";
+
+
+            historyList.innerHTML =
+                analysisHistory
+                    .map(item => `
+
+                        <div class="history-item">
+
+                            <div class="history-url">
+
+                                ${escapeHTML(
+                                    item.url
+                                )}
+
+                            </div>
+
+
+                            <div class="history-details">
+
+                                <span class="${getRiskClass(
+                                    item.riskLevel
+                                )}">
+
+                                    ${escapeHTML(
+                                        item.riskLevel
+                                    )}
+
+                                </span>
+
+
+                                <span>
+
+                                    Score:
+                                    ${item.riskScore}
+
+                                </span>
+
+
+                                <span class="${item.trusted
+                                    ? 'trusted-yes'
+                                    : 'trusted-no'}">
+
+                                    ${item.trusted
+                                        ? "Trusted"
+                                        : "Not in Trusted Database"}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    `)
+                    .join("");
+
+        }
+
+
+        /*
+         * Clear history
+         */
+
+        function clearHistory() {
+
+            analysisHistory = [];
+
+            displayHistory();
+
+        }
+
+
+        /*
+         * Escape HTML
+         *
+         * Prevents a URL entered by
+         * the user from being interpreted
+         * as HTML.
+         */
+
+        function escapeHTML(value) {
+
+            return value
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -2,9 +2,12 @@ package com.phishguard.analyzer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+
+import com.phishguard.model.AnalysisResult;
 
 public class URLAnalyzerTest {
 
@@ -339,4 +342,137 @@ public class URLAnalyzerTest {
                     analyzer.isTrustedURL("https://trusted-test.example.com")
             );
         }
+        @Test
+void shouldDetectPunycode() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    AnalysisResult result =
+            analyzer.analyze("https://xn--pple-43d.com/login");
+
+    assertTrue(
+            result.getIndicators()
+                    .contains("URL uses Punycode encoding")
+    );
+}
+@Test
+void shouldNotMarkLegitimateURLsAsHighRisk() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    String[] legitimateUrls = {
+            "https://example.com",
+            "https://www.google.com",
+            "https://www.microsoft.com",
+            "https://www.apple.com",
+            "https://www.amazon.com",
+            "https://github.com",
+            "https://leetcode.com",
+            "https://stackoverflow.com"
+    };
+
+    for (String url : legitimateUrls) {
+
+        AnalysisResult result = analyzer.analyze(url);
+
+        assertNotEquals(
+                "High Risk",
+                result.getRiskLevel(),
+                "Legitimate URL incorrectly marked High Risk: " + url
+        );
+    }
+}
+@Test
+void shouldHandleSuspiciousLookingURLsWithoutAssumingPhishing() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    String[] suspiciousLookingUrls = {
+            "http://example.com/login",
+            "https://secure.example.com/account/login",
+            "https://example.com/account/verify?session=12345",
+            "https://login.example.com/user/account"
+    };
+
+    for (String url : suspiciousLookingUrls) {
+
+        AnalysisResult result = analyzer.analyze(url);
+
+        assertNotEquals(
+                "High Risk",
+                result.getRiskLevel(),
+                "URL was automatically classified as High Risk: " + url
+        );
+    }
+}
+@Test
+void shouldDetectMultipleRiskIndicators() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    AnalysisResult result =
+            analyzer.analyze("http://142.250.195.14/login");
+
+    assertTrue(result.getRiskScore() >= 4);
+
+    assertTrue(
+            result.getIndicators()
+                    .contains("URL uses a direct IP address")
+    );
+
+    assertTrue(
+            result.getIndicators()
+                    .contains("URL uses HTTP instead of HTTPS")
+    );
+
+    assertTrue(
+            result.getIndicators()
+                    .contains("Suspicious keyword detected: login")
+    );
+}
+@Test
+void shouldAddRiskForPunycode() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    AnalysisResult result =
+            analyzer.analyze("https://xn--pple-43d.com/login");
+
+    assertTrue(result.getRiskScore() >= 3);
+
+    assertTrue(
+            result.getIndicators()
+                    .contains("URL uses Punycode encoding")
+    );
+ }
+ @Test
+void shouldExplainEmptyURL() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    assertEquals(
+            "URL is empty.",
+            analyzer.getInvalidURLReason("")
+    );
+}
+@Test
+void shouldExplainMissingProtocol() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    assertEquals(
+            "URL is missing a protocol. Use http:// or https://.",
+            analyzer.getInvalidURLReason("example.com")
+    );
+}
+@Test
+void shouldExplainUnsupportedProtocol() {
+
+    URLAnalyzer analyzer = new URLAnalyzer();
+
+    assertEquals(
+            "Unsupported protocol. Only HTTP and HTTPS are allowed.",
+            analyzer.getInvalidURLReason("ftp://example.com")
+    );
+}
 }
