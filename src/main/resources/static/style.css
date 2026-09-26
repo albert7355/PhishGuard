@@ -84,7 +84,51 @@ body {
 
     border-radius: 11px;
 
-    font-size: 23px;
+    position: relative;
+}
+
+
+.brand-mark {
+    width: 18px;
+    height: 20px;
+
+    display: block;
+
+    position: relative;
+
+    border:
+        2px solid #2563eb;
+
+    border-radius:
+        5px
+        5px
+        8px
+        8px;
+
+    transform:
+        scaleX(0.9);
+}
+
+
+.brand-mark::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+
+    bottom: 4px;
+
+    width: 5px;
+    height: 5px;
+
+    transform:
+        translateX(-50%);
+
+    border:
+        1.5px solid #2563eb;
+
+    border-radius: 50%;
 }
 
 
@@ -266,16 +310,20 @@ body {
 .input-icon {
     position: absolute;
 
-    left: 16px;
+    left: 17px;
 
     top: 50%;
 
     transform:
         translateY(-50%);
 
-    color: #98a2b3;
+    width: 10px;
+    height: 10px;
 
-    font-size: 17px;
+    border:
+        1.5px solid #98a2b3;
+
+    border-radius: 50%;
 
     pointer-events: none;
 }
@@ -302,6 +350,8 @@ body {
     color: #101828;
 
     font-size: 14px;
+
+    line-height: 1.5;
 
     outline: none;
 
@@ -609,6 +659,8 @@ body {
         1px solid #e4e7ec;
 
     border-radius: 12px;
+
+    min-height: 0;
 }
 
 
@@ -684,7 +736,9 @@ body {
 
 
 .risk-donut-center strong {
-    font-size: 30px;
+    font-size: 32px;
+
+    line-height: 1;
 
     color: #101828;
 }
@@ -698,9 +752,9 @@ body {
 
 
 .risk-score-description {
-    max-width: 210px;
+    max-width: 225px;
 
-    margin: 18px 0 0;
+    margin: 16px 0 0;
 
     color: #667085;
 
@@ -725,6 +779,8 @@ body {
         1px solid #e4e7ec;
 
     border-radius: 12px;
+
+    min-height: 0;
 }
 
 
@@ -806,6 +862,11 @@ body {
     font-size: 12px;
 
     line-height: 1.4;
+}
+
+
+.indicators li:last-child {
+    margin-bottom: 0;
 }
 
 
@@ -896,9 +957,13 @@ body {
 
     font-family: monospace;
 
-    font-size: 12px;
+    font-size: 13px;
 
-    word-break: break-all;
+    line-height: 1.55;
+
+    word-break: break-word;
+
+    overflow-wrap: anywhere;
 }
 
 
@@ -962,8 +1027,8 @@ body {
 }
 
 
-.trusted-no {
-    color: #dc2626 !important;
+.trusted-neutral {
+    color: #667085 !important;
 }
 
 
@@ -1193,9 +1258,13 @@ body {
 
     font-family: monospace;
 
-    font-size: 12px;
+    font-size: 13px;
 
-    word-break: break-all;
+    line-height: 1.5;
+
+    word-break: break-word;
+
+    overflow-wrap: anywhere;
 }
 
 
@@ -1313,6 +1382,11 @@ footer {
         align-items: center;
     }
 
+
+    .risk-score-panel {
+        min-height: 300px;
+    }
+
 }
 
 
@@ -1354,8 +1428,6 @@ footer {
     .brand-icon {
         width: 40px;
         height: 40px;
-
-        font-size: 21px;
     }
 
 

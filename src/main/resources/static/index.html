@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -29,8 +28,8 @@
 
             <div class="brand">
 
-                <div class="brand-icon">
-                    🛡️
+                <div class="brand-icon" aria-hidden="true">
+                    <span class="brand-mark"></span>
                 </div>
 
                 <div class="brand-text">
@@ -114,9 +113,8 @@
 
                     <div class="input-wrapper">
 
-                        <span class="input-icon">
-                            ↗
-                        </span>
+                        <span class="input-icon"
+                              aria-hidden="true"></span>
 
 
                         <input
@@ -629,9 +627,9 @@
 
                             <p class="risk-score-description">
 
-                                Higher scores indicate more
-                                detected suspicious
-                                characteristics.
+                                Score based on detected
+                                URL characteristics.
+                                This is not a probability.
 
                             </p>
 
@@ -728,7 +726,7 @@
 
                             <strong class="${result.trusted
                                 ? 'trusted-yes'
-                                : 'trusted-no'}">
+                                : 'trusted-neutral'}">
 
                                 ${trustedStatus}
 
@@ -1089,7 +1087,7 @@
 
                                 <span class="${item.trusted
                                     ? 'trusted-yes'
-                                    : 'trusted-no'}">
+                                    : 'trusted-neutral'}">
 
                                     ${item.trusted
                                         ? "Trusted"
